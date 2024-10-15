@@ -58,6 +58,7 @@ contract DSCEngine is ReentrancyGuard {
     mapping(address token => address pricefeed) s_priceFeeds; // tokenToPriceFeed
     // user address to token to amount, tracking the user's deposit of collateral
     mapping(address user => mapping(address token => uint256)) private s_collateralDeposited;
+    mapping(address user => uint256 dscAmountMinted) private s_dscMinted;
 
     DecentralizedStableCoin private immutable i_dsc; // DSC instance
 
@@ -129,12 +130,45 @@ contract DSCEngine is ReentrancyGuard {
     function redeemCollateralForDSC() external {}
 
     function redeemCollateral() external {}
+    /**
+     * @notice follows CEI pattern
+     * @param amountToMint The amount of DSC to mint
+     * @notice The amountToMint must be greater than 0
+     * and the user must have enough collateral to mint
+     */
 
-    function mintDSC() external {}
+    function mintDSC(uint256 amountToMint) external moreThanZero(amountToMint) nonReentrant {
+        s_dscMinted[msg.sender] += amountToMint;
+    }
 
     function burnDSC() external {}
 
     function liquidate() external {}
 
     function getHealthFactor() external view {}
+
+    /// Private And Internal View Functions ///
+
+    function _getAccountInformation(address user)
+        private
+        view
+        returns (uint256 totalDscMinted, uint256 totalCollateralValueInUSD)
+    {
+        totalDscMinted = s_dscMinted[user];
+        totalCollateralValueInUSD = getTotalCollateralValueInUSD(user);
+    }
+
+    /**
+     *
+     * @param user The address of the user
+     * @return The health factor of the user, or how close they are to liquidation
+     * If the factor is less than 1 then they can be liquidated
+     */
+    function _healthFactor(address user) private view returns (uint256) {
+        // we need total dsc minted by user
+        // and we need total collateral value in USD by user
+        (uint256 totalDscMinted, uint256 totalCollateralValueInUSD) = _getAccountInformation(user);
+    }
+
+    function _revertIfHealthFactorIsBroken() private view {}
 }
