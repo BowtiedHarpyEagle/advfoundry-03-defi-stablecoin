@@ -28,6 +28,7 @@ pragma solidity ^0.8.18;
 import {DecentralizedStableCoin} from "./DecentralizedStableCoin.sol";
 import {ReentrancyGuard} from "@openzeppelin/contracts/security/ReentrancyGuard.sol";
 import {IERC20} from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
+import {AggregatorV3Interface} from "@chainlink/contracts/src/v0.8/interfaces/AggregatorV3Interface.sol";
 
 /**
  * @title DSCEngine
@@ -54,11 +55,14 @@ contract DSCEngine is ReentrancyGuard {
     error DSCEngine__TransferFailed();
 
     /// State Variables ///
+    uint256 private constant ADDITIONAL_FEED_PRECISION = 1e10;
+    uint256 private constant PRECISION = 1e18;
 
     mapping(address token => address pricefeed) s_priceFeeds; // tokenToPriceFeed
     // user address to token to amount, tracking the user's deposit of collateral
     mapping(address user => mapping(address token => uint256)) private s_collateralDeposited;
     mapping(address user => uint256 dscAmountMinted) private s_dscMinted;
+    address[] private s_collateralTokens;
 
     DecentralizedStableCoin private immutable i_dsc; // DSC instance
 
@@ -97,6 +101,7 @@ contract DSCEngine is ReentrancyGuard {
 
         for (uint256 i = 0; i < tokenAddresses.length; i++) {
             s_priceFeeds[tokenAddresses[i]] = priceFeedAddresses[i];
+            s_collateralTokens.push(tokenAddresses[i]);
         }
 
         i_dsc = DecentralizedStableCoin(dscAddress);
@@ -152,10 +157,10 @@ contract DSCEngine is ReentrancyGuard {
     function _getAccountInformation(address user)
         private
         view
-        returns (uint256 totalDscMinted, uint256 totalCollateralValueInUSD)
+        returns (uint256 totalDscMinted, uint256 collateralValueInUSD)
     {
         totalDscMinted = s_dscMinted[user];
-        totalCollateralValueInUSD = getTotalCollateralValueInUSD(user);
+        collateralValueInUSD = getTotalCollateralValueInUSD(user);
     }
 
     /**
@@ -171,4 +176,24 @@ contract DSCEngine is ReentrancyGuard {
     }
 
     function _revertIfHealthFactorIsBroken() private view {}
+
+    /// Public and External View Functions ///
+
+    function getTotalCollateralValueInUSD(address user) public view returns (uint256 totalCollateralValueInUSD) {
+        //we need to loop through each collateral token, and get the price
+        //from the price feed to calculate the total collateral value in USD
+        for (uint256 i = 0; i < s_collateralTokens.length; i++) {
+            address token = s_collateralTokens[i];
+            uint256 amount = s_collateralDeposited[user][token];
+            totalCollateralValueInUSD += getUSDValue(token, amount);
+        }
+        return totalCollateralValueInUSD;
+    }
+
+    function getUSDValue(address token, uint256 amount) public view returns (uint256) {
+        AggregatorV3Interface priceFeed = AggregatorV3Interface(s_priceFeeds[token]);
+        (, int256 price,,,) = priceFeed.latestRoundData(); // get latest price, ignore other data
+
+        return ((uint256(price) * ADDITIONAL_FEED_PRECISION * amount) / PRECISION);
+    }
 }
