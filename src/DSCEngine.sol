@@ -45,9 +45,58 @@ pragma solidity ^0.8.18 ;
 
 contract DSCEngine {
 
+    /// Errors /// 
+    error DSCEngine__NeedsMoreThanZero(); 
+    error DSCEngine__TokenAddressesAndPriceFeedAddressesMustBeTheSameLength();
+
+    /// State Variables ///
+
+    mapping (address token => address pricefeed) s_priceFeeds; // tokenToPriceFeed
+
+
+    /// Modifiers ///
+
+    modifier moreThanZero(uint256 amount) {
+        if (amount == 0) {
+            revert DSCEngine__NeedsMoreThanZero();
+        }
+        _;
+    }
+
+    /// Functions ///
+
+    constructor (
+        address[] memory tokenAddresses,
+        address[] memory priceFeedAddresses,
+        address dscAddress
+
+    ) {
+        if (tokenAddresses.length != priceFeedAddresses.length) {
+            revert DSCEngine__TokenAddressesAndPriceFeedAddressesMustBeTheSameLength();
+        }
+
+    }
+
+
+    /// External Functions ///
+
+
     function depositCollateralAndMintDSC() external {}
 
-    function depositCollateral() external{}
+    /**
+     * 
+     * @param tokenCollateralAddress The address of the token to deposit as collateral
+     * @param amountCollateral The amount of collateral to deposit 
+     */
+
+    
+
+    function depositCollateral(
+        address tokenCollateralAddress, 
+        uint256 amountCollateral
+    ) moreThanZero(amountCollateral) external {
+
+    }
 
     function redeemCollateralForDSC() external {}
 
