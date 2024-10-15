@@ -57,6 +57,9 @@ contract DSCEngine is ReentrancyGuard {
     /// State Variables ///
     uint256 private constant ADDITIONAL_FEED_PRECISION = 1e10;
     uint256 private constant PRECISION = 1e18;
+    // This means for $100 USD as collateral one can mint $50 DSC
+    uint256 private constant LIQUIDATION_THRESHOLD = 50;
+    uint256 private constant LIQUIDATION_PRECISION = 100;
 
     mapping(address token => address pricefeed) s_priceFeeds; // tokenToPriceFeed
     // user address to token to amount, tracking the user's deposit of collateral
@@ -173,6 +176,11 @@ contract DSCEngine is ReentrancyGuard {
         // we need total dsc minted by user
         // and we need total collateral value in USD by user
         (uint256 totalDscMinted, uint256 totalCollateralValueInUSD) = _getAccountInformation(user);
+
+        uint256 collateralAdjustedForTreshold =
+            totalCollateralValueInUSD * LIQUIDATION_THRESHOLD / LIQUIDATION_PRECISION;
+
+        return (collateralAdjustedForTreshold * PRECISION) / totalDscMinted;
     }
 
     function _revertIfHealthFactorIsBroken() private view {}
