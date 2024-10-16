@@ -55,6 +55,7 @@ contract DSCEngine is ReentrancyGuard {
     error DSCEngine__TransferFailed();
     error DSCEngine__HealthFactorTooLow(uint256 healthFactor);
     error DSCEngine__MintFailed();
+    error DSCEngine__HealthFactorOk();
 
     /// State Variables ///
     uint256 private constant ADDITIONAL_FEED_PRECISION = 1e10;
@@ -209,7 +210,25 @@ contract DSCEngine is ReentrancyGuard {
         _revertIfHealthFactorIsBroken(msg.sender);
     }
 
-    function liquidate() external {}
+    /**
+     * @param collateral The address of ERC20 token representing the collateral
+     * @param user The address of the user whose health factor dropped below
+     * MIN_HEALTH_FACTOR. This user is liquidated.
+     * @param debtToCover The amount of DSC to burn to improve the health factor
+     * @notice You can partially liquidate a user as long as health factor improves
+     * @notice You will get a liquidation bonus for taking the users funds
+     * @notice This function assumes the protocol will always be overcollateralized
+     * @notice A known bug would be that if the collateral price plummets before people
+     * can liquidate, then the protocol will not be able to incentivise liquidation
+     */
+    function liquidate(address collateral, address user, uint256 debtToCover) external {
+        //first check the health factor of the user
+        uint256 healthFactor = _healthFactor(user);
+        if (healthFactor >= MIN_HEALTH_FACTOR) {
+            revert DSCEngine__HealthFactorOk();
+        }
+        //get the collateral value
+    }
 
     function getHealthFactor() external view {}
 
