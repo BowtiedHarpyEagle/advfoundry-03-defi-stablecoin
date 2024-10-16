@@ -21,6 +21,15 @@ contract HelperConfig is Script {
 
     NetworkConfig public activeNetworkConfig;
 
+    constructor() {
+        if (block.chainid == 11155111) {
+            activeNetworkConfig = getSepoliaNetworkConfig();
+        } else {
+            activeNetworkConfig = getOrCreateAnvilNetworkConfig();
+        }            
+        }
+    }
+
     function getSepoliaNetworkConfig() public view returns (NetworkConfig memory) {
         return NetworkConfig({
             wethUsdPriceFeed: 0x694AA1769357215DE4FAC081bf1f309aDC325306,
