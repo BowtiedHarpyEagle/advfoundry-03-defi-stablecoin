@@ -26,11 +26,10 @@ contract HelperConfig is Script {
             activeNetworkConfig = getSepoliaNetworkConfig();
         } else {
             activeNetworkConfig = getOrCreateAnvilNetworkConfig();
-        }            
         }
     }
 
-    function getSepoliaNetworkConfig() public view returns (NetworkConfig memory) {
+    function getSepoliaNetworkConfig() public pure returns (NetworkConfig memory) {
         return NetworkConfig({
             wethUsdPriceFeed: 0x694AA1769357215DE4FAC081bf1f309aDC325306,
             wbtcUsdPriceFeed: 0x1b44F3514812d835EB1BDB0acB33d3fA3351Ee43,
