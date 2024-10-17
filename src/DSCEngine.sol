@@ -227,7 +227,13 @@ contract DSCEngine is ReentrancyGuard {
         if (healthFactor >= MIN_HEALTH_FACTOR) {
             revert DSCEngine__HealthFactorOk();
         }
-        //get the collateral value
+        // we want to burn DSC debt
+        // and take their collateral
+        // bad user: $140 eth collateral, 100 dsc debt
+        // debtToCover: 100$
+        // how much eth would cover $100 debt?
+
+        uint256 tokenAmountFromDebtCovered = getTokenAmountFromUsdValue(collateral, debtToCover);
     }
 
     function getHealthFactor() external view {}
@@ -268,6 +274,12 @@ contract DSCEngine is ReentrancyGuard {
     }
 
     /// Public and External View Functions ///
+
+    function getTokenAmountFromUsdValue(address token, uint256 usdAmountInWei) public view returns (uint256) {
+        AggregatorV3Interface priceFeed = AggregatorV3Interface(s_priceFeeds[token]);
+        (, int256 price,,,) = priceFeed.latestRoundData(); // get latest price, ignore other data
+        return (usdAmountInWei * PRECISION) / (uint256(price) * ADDITIONAL_FEED_PRECISION);
+    }
 
     function getTotalCollateralValueInUSD(address user) public view returns (uint256 totalCollateralValueInUSD) {
         //we need to loop through each collateral token, and get the price
