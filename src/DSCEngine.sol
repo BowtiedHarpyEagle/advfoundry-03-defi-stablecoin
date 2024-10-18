@@ -56,6 +56,7 @@ contract DSCEngine is ReentrancyGuard {
     error DSCEngine__HealthFactorTooLow(uint256 healthFactor);
     error DSCEngine__MintFailed();
     error DSCEngine__HealthFactorOk();
+    error DSCEngine__HealthFactorNotImproved();
 
     /// State Variables ///
     uint256 private constant ADDITIONAL_FEED_PRECISION = 1e10;
@@ -195,13 +196,8 @@ contract DSCEngine is ReentrancyGuard {
     }
 
     function burnDSC(uint256 amount) public moreThanZero(amount) {
-        s_dscMinted[msg.sender] -= amount;
-        bool success = i_dsc.transferFrom(msg.sender, address(this), amount);
+        _burnDSC(amount, msg.sender, msg.sender);
 
-        if (!success) {
-            revert DSCEngine__TransferFailed();
-        }
-        i_dsc.burn(amount);
         // I don't think this will ever be triggered
         _revertIfHealthFactorIsBroken(msg.sender);
     }
@@ -219,8 +215,8 @@ contract DSCEngine is ReentrancyGuard {
      */
     function liquidate(address collateral, address user, uint256 debtToCover) external {
         //first check the health factor of the user
-        uint256 healthFactor = _healthFactor(user);
-        if (healthFactor >= MIN_HEALTH_FACTOR) {
+        uint256 startingUserHealthFactor = _healthFactor(user);
+        if (startingUserHealthFactor >= MIN_HEALTH_FACTOR) {
             revert DSCEngine__HealthFactorOk();
         }
         // we want to burn DSC debt
@@ -236,11 +232,33 @@ contract DSCEngine is ReentrancyGuard {
         uint256 totalCollateralToRedeem = tokenAmountFromDebtCovered + bonusCollateral;
 
         _redeemCollateral(user, msg.sender, collateral, totalCollateralToRedeem);
+        _burnDSC(debtToCover, user, msg.sender);
+
+        uint256 endingUserHealthFactor = _healthFactor(user);
+
+        if (endingUserHealthFactor <= startingUserHealthFactor) {
+            revert DSCEngine__HealthFactorNotImproved();
+        }
+        _revertIfHealthFactorIsBroken(msg.sender);
     }
 
     function getHealthFactor() external view {}
 
     /// Private And Internal View Functions ///
+
+    /**
+     * @dev Low level internal function, do not call unless the function calling it
+     * is checking for health factors being broken.
+     */
+    function _burnDSC(uint256 amountDSCToBurn, address onBehalfOf, address dscfrom) private {
+        s_dscMinted[onBehalfOf] -= amountDSCToBurn;
+        bool success = i_dsc.transferFrom(dscfrom, address(this), amountDSCToBurn);
+
+        if (!success) {
+            revert DSCEngine__TransferFailed();
+        }
+        i_dsc.burn(amountDSCToBurn);
+    }
 
     function _redeemCollateral(address from, address to, address tokenCollateralAddress, uint256 amountCollateral)
         internal
