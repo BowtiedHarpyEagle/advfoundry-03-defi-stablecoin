@@ -1,12 +1,13 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.18;
 
-import {Test} from "forge-std/Test.sol";
+import {Test, console} from "forge-std/Test.sol";
 import {DeployDSC} from "script/DeployDSC.s.sol";
 import {DSCEngine} from "src/DSCEngine.sol";
 import {DecentralizedStableCoin} from "src/DecentralizedStableCoin.sol";
 import {HelperConfig} from "script/HelperConfig.s.sol";
 import {ERC20Mock} from "@openzeppelin/contracts/mocks/ERC20Mock.sol";
+import {MockV3Aggregator} from "test/mocks/MockV3Aggregator.sol";
 
 contract DSCEngineTest is Test {
     DeployDSC deployer;
@@ -22,6 +23,10 @@ contract DSCEngineTest is Test {
 
     uint256 public constant AMOUNT_COLLATERAL = 10e18;
     uint256 public constant STARTING_ERC20_BALANCE = 10e18;
+
+    uint256 amountCollateral = 10 ether;
+    uint256 amountToMint = 100 ether;
+    address public user = address(1);
 
     function setUp() public {
         deployer = new DeployDSC();
@@ -65,6 +70,25 @@ contract DSCEngineTest is Test {
     }
 
     /// Deposit Collateral Tests ///
+
+    function testRevertsIfMintedDscBreaksHealthFactor() public {
+        (, int256 price,,,) = MockV3Aggregator(ethUsdPriceFeed).latestRoundData();
+        amountToMint =
+            (amountCollateral * (uint256(price) * dscengine.getAdditionalFeedPrecision())) / dscengine.getPrecision();
+        vm.startPrank(user);
+        ERC20Mock(weth).approve(address(dscengine), amountCollateral);
+
+        uint256 expectedHealthFactor =
+            dscengine.calculateHealthFactor(amountToMint, dscengine.getUsdValue(weth, amountCollateral));
+
+        console.log("User WETH balance:", ERC20Mock(weth).balanceOf(USER));
+        console.log("Amount collateral:", amountCollateral);
+        console.log("Amount to mint:", amountToMint);
+
+        vm.expectRevert(abi.encodeWithSelector(DSCEngine.DSCEngine__HealthFactorTooLow.selector, expectedHealthFactor));
+        dscengine.depositCollateralAndMintDSC(weth, amountCollateral, amountToMint);
+        vm.stopPrank();
+    }
 
     function testRevertsWithUnapprovedCollateral() public {
         ERC20Mock ranToken = new ERC20Mock("ranToken", "RAN", USER, AMOUNT_COLLATERAL);

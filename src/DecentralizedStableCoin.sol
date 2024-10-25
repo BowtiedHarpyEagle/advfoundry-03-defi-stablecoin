@@ -23,18 +23,18 @@
 // private
 // view & pure functions
 
-pragma solidity ^0.8.18 ;
+pragma solidity ^0.8.18;
 
 import {ERC20Burnable, ERC20} from "@openzeppelin/contracts/token/ERC20/extensions/ERC20Burnable.sol";
 import {Ownable} from "@openzeppelin/contracts/access/Ownable.sol";
 /**
  * @title DecentralizedStableCoin
- * @author Bowtied HarpyEagle 
+ * @author Bowtied HarpyEagle
  * Collateral: Exogenous (wETH and wBTC)
  * Minting: Algorithmic
  * Relative stability: Pegged to USD
- * 
- * This contract is meant to be governed by DSCEngine. This contract is just the 
+ *
+ * This contract is meant to be governed by DSCEngine. This contract is just the coin.
  */
 
 contract DecentralizedStableCoin is ERC20Burnable, Ownable {
@@ -42,9 +42,7 @@ contract DecentralizedStableCoin is ERC20Burnable, Ownable {
     error DecentralizedStableCoin__BurnAmountExceedsBalance();
     error DecentralizedStableCoin__NotZeroAddress();
 
-    constructor() ERC20("DecentralizedStableCoin", "DSC") {
-        
-    }
+    constructor() ERC20("DecentralizedStableCoin", "DSC") {}
 
     function burn(uint256 _amount) public override {
         uint256 balance = balanceOf(msg.sender);
@@ -53,14 +51,13 @@ contract DecentralizedStableCoin is ERC20Burnable, Ownable {
         }
         if (balance < _amount) {
             revert DecentralizedStableCoin__BurnAmountExceedsBalance();
-
         }
         // super here means go to the parent class, ERC20Burnable, and use the burn
-        // function from that contract. 
+        // function from that contract.
         super.burn(_amount);
     }
 
-    function mint(address _to, uint256 _amount) external onlyOwner returns(bool){
+    function mint(address _to, uint256 _amount) external onlyOwner returns (bool) {
         if (_to == address(0)) {
             revert DecentralizedStableCoin__NotZeroAddress();
         }
