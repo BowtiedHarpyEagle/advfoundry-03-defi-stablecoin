@@ -63,7 +63,7 @@ contract DSCEngine is ReentrancyGuard {
     uint256 private constant PRECISION = 1e18;
     // This means for $100 USD as collateral one can mint $50 DSC
     uint256 private constant LIQUIDATION_THRESHOLD = 50;
-    uint256 private constant LIQUIDATION_PRECISION = 100;
+    uint256 private constant LIQUIDATION_PRECISION = 100; // 100% not 100 zeros
     uint256 private constant MIN_HEALTH_FACTOR = 1;
     uint256 private constant LIQUIDATION_BONUS = 10;
 
@@ -289,14 +289,18 @@ contract DSCEngine is ReentrancyGuard {
      * If the factor is less than 1 then they can be liquidated
      */
     function _healthFactor(address user) private view returns (uint256) {
-        // we need total dsc minted by user
-        // and we need total collateral value in USD by user
-        (uint256 totalDscMinted, uint256 totalCollateralValueInUSD) = _getAccountInformation(user);
+        (uint256 totalDscMinted, uint256 collateralValueInUsd) = _getAccountInformation(user);
+        return _calculateHealthFactor(totalDscMinted, collateralValueInUsd);
+    }
 
-        uint256 collateralAdjustedForTreshold =
-            totalCollateralValueInUSD * LIQUIDATION_THRESHOLD / LIQUIDATION_PRECISION;
-
-        return (collateralAdjustedForTreshold * PRECISION) / totalDscMinted;
+    function _calculateHealthFactor(uint256 totalDscMinted, uint256 collateralValueInUsd)
+        internal
+        pure
+        returns (uint256)
+    {
+        if (totalDscMinted == 0) return type(uint256).max;
+        uint256 collateralAdjustedForThreshold = (collateralValueInUsd * LIQUIDATION_THRESHOLD) / LIQUIDATION_PRECISION;
+        return (collateralAdjustedForThreshold * PRECISION) / totalDscMinted;
     }
 
     function _revertIfHealthFactorIsBroken(address user) private view {
@@ -307,6 +311,14 @@ contract DSCEngine is ReentrancyGuard {
     }
 
     /// Public and External View Functions ///
+
+    function calculateHealthFactor(uint256 totalDscMinted, uint256 collateralValueInUsd)
+        external
+        pure
+        returns (uint256)
+    {
+        return _calculateHealthFactor(totalDscMinted, collateralValueInUsd);
+    }
 
     function getTokenAmountFromUsdValue(address token, uint256 usdAmountInWei) public view returns (uint256) {
         AggregatorV3Interface priceFeed = AggregatorV3Interface(s_priceFeeds[token]);
