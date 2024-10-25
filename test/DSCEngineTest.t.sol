@@ -46,6 +46,15 @@ contract DSCEngineTest is Test {
 
     /// Price Tests ///
 
+    function testGetTokenAmountFromUsdValue() public view {
+        // test the simple math, 2400 usd * 10 eth = 24000 eth
+        uint256 usdAmount = 24000e18;
+        uint256 expectedWeth = 10e18;
+
+        uint256 actualWeth = dscengine.getTokenAmountFromUsdValue(weth, usdAmount);
+        assertEq(actualWeth, expectedWeth);
+    }
+
     function testGetUSDValue() public view {
         // test the simple math, 10 eth * 2400 usd = 24000 usd
         uint256 ethAmount = 10e18;
