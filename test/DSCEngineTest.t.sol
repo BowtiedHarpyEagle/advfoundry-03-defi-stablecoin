@@ -84,6 +84,7 @@ contract DSCEngineTest is Test {
         console.log("User WETH balance:", ERC20Mock(weth).balanceOf(USER));
         console.log("Amount collateral:", amountCollateral);
         console.log("Amount to mint:", amountToMint);
+        console.log("Expected health factor:", expectedHealthFactor);
 
         vm.expectRevert(abi.encodeWithSelector(DSCEngine.DSCEngine__HealthFactorTooLow.selector, expectedHealthFactor));
         dscengine.depositCollateralAndMintDSC(weth, amountCollateral, amountToMint);
