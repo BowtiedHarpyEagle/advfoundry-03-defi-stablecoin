@@ -64,7 +64,7 @@ contract DSCEngine is ReentrancyGuard {
     // This means for $100 USD as collateral one can mint $50 DSC
     uint256 private constant LIQUIDATION_THRESHOLD = 50;
     uint256 private constant LIQUIDATION_PRECISION = 100; // 100% not 100 zeros
-    uint256 private constant MIN_HEALTH_FACTOR = 1;
+    uint256 private constant MIN_HEALTH_FACTOR = 1e18;
     uint256 private constant LIQUIDATION_BONUS = 10;
 
     mapping(address token => address pricefeed) s_priceFeeds; // tokenToPriceFeed
@@ -315,6 +315,7 @@ contract DSCEngine is ReentrancyGuard {
 
     function _revertIfHealthFactorIsBroken(address user) private view {
         uint256 userHealthFactor = _healthFactor(user);
+
         if (userHealthFactor < MIN_HEALTH_FACTOR) {
             revert DSCEngine__HealthFactorTooLow(userHealthFactor);
         }
