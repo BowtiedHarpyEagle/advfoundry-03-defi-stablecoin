@@ -40,5 +40,12 @@ contract InvariantsTest is StdInvariant, Test {
         uint256 totalSupply = dsc.totalSupply();
         uint256 totalWethDeposited = IERC20(weth).balanceOf(address(dsce));
         uint256 totalWbtcDeposited = IERC20(wbtc).balanceOf(address(dsce));
+
+        uint256 totalWethValue = dsce.getUSDValue(weth, totalWethDeposited);
+        uint256 totalWbtcValue = dsce.getUSDValue(wbtc, totalWbtcDeposited);
+
+        uint256 totalValue = totalWethValue + totalWbtcValue;
+
+        assert(totalSupply < totalValue);
     }
 }
