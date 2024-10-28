@@ -33,6 +33,7 @@ contract DSCEngineTest is Test {
         (dsc, dscengine, config) = deployer.run();
         (ethUsdPriceFeed, btcUsdPriceFeed, weth,,) = config.activeNetworkConfig();
         ERC20Mock(weth).mint(USER, STARTING_ERC20_BALANCE);
+        ERC20Mock(weth).mint(user, STARTING_ERC20_BALANCE);
     }
 
     /// Constructor Tests ///
@@ -81,7 +82,8 @@ contract DSCEngineTest is Test {
         uint256 expectedHealthFactor =
             dscengine.calculateHealthFactor(amountToMint, dscengine.getUsdValue(weth, amountCollateral));
 
-        console.log("User WETH balance:", ERC20Mock(weth).balanceOf(USER));
+        console.log("User address:", user);
+        console.log("User WETH balance:", ERC20Mock(weth).balanceOf(user));
         console.log("Amount collateral:", amountCollateral);
         console.log("Amount to mint:", amountToMint);
         console.log("Expected health factor:", expectedHealthFactor);
