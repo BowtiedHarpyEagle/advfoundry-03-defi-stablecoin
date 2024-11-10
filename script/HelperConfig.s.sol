@@ -4,6 +4,7 @@ pragma solidity ^0.8.18;
 import {Script} from "forge-std/Script.sol";
 import {MockV3Aggregator} from "test/mocks/MockV3Aggregator.sol";
 import {ERC20Mock} from "@openzeppelin/contracts/mocks/ERC20Mock.sol";
+import {console} from "forge-std/console.sol";
 
 contract HelperConfig is Script {
     struct NetworkConfig {
@@ -40,6 +41,8 @@ contract HelperConfig is Script {
 
     function getOrCreateAnvilNetworkConfig() public returns (NetworkConfig memory) {
         if (activeNetworkConfig.wethUsdPriceFeed != address(0)) {
+            console.log("Using existing network config");
+            console.log("Deployer Key:", activeNetworkConfig.deployerKey);
             return activeNetworkConfig;
         }
 
@@ -49,6 +52,7 @@ contract HelperConfig is Script {
         ERC20Mock weth = new ERC20Mock("Wrapped Ether", "WETH", msg.sender, 1000e8);
         ERC20Mock wbtc = new ERC20Mock("Wrapped Bitcoin", "WBTC", msg.sender, 1000e8);
         vm.stopBroadcast();
+        console.log("HelperConfig::Deployer Key:", DEFAULT_ANVIL_PRIVATE_KEY);
         return NetworkConfig({
             wethUsdPriceFeed: address(wethUsdPriceFeed),
             wbtcUsdPriceFeed: address(wbtcUsdPriceFeed),

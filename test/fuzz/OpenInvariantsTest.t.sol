@@ -30,7 +30,13 @@ contract InvariantsTest is StdInvariant, Test {
         deployer = new DeployDSC();
 
         (dsc, dsce, config) = deployer.run();
-        (,, weth, wbtc,) = config.activeNetworkConfig();
+        (address wethUsdPriceFeed, address wbtcUsdPriceFeed, address weth, address wbtc, uint256 deployerKey) =
+            config.activeNetworkConfig();
+        console.log("WETH USD Price Feed:", wethUsdPriceFeed);
+        console.log("WBTC USD Price Feed:", wbtcUsdPriceFeed);
+        console.log("WETH Address:", weth);
+        console.log("WBTC Address:", wbtc);
+        console.log("Deployer Key:", deployerKey);
 
         targetContract(address(dsce));
     }
