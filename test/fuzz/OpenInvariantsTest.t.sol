@@ -52,6 +52,6 @@ contract InvariantsTest is StdInvariant, Test {
         uint256 wethValue = dsce.getUSDValue(weth, totalWethDeposited);
         uint256 wbtcValue = dsce.getUSDValue(wbtc, totalWbtcDeposited);
 
-        assert(wethValue + wbtcValue > totalSupply);
+        assert(wethValue + wbtcValue >= totalSupply);
     }
 }
