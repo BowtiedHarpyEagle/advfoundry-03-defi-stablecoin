@@ -92,6 +92,11 @@ contract DSCEngineTest is Test {
         assertEq(AMOUNT_COLLATERAL, expectedDepositAmount);
     }
 
+    function testCanDepositCollateralWithoutMinting() public depositedCollateral {
+        uint256 userBalance = dsc.balanceOf(USER);
+        assertEq(userBalance, 0);
+    }
+
     function testRevertsIfCollateralIsZero() public {
         vm.startPrank(USER);
         ERC20Mock(weth).approve(address(dscengine), AMOUNT_COLLATERAL);
