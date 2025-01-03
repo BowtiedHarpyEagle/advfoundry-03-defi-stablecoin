@@ -96,6 +96,23 @@ contract DSCEngineTest is Test {
         uint256 userBalance = dsc.balanceOf(USER);
         assertEq(userBalance, 0);
     }
+    /////////////////////////////////////////////
+    /// Deposit Collateral and Mint DSC Tests ///
+    /////////////////////////////////////////////
+
+
+        modifier depositedCollateralAndMintedDsc() {
+        vm.startPrank(USER);
+        ERC20Mock(weth).approve(address(dscengine), amountCollateral);
+        dscengine.depositCollateralAndMintDsc(weth, amountCollateral, amountToMint);
+        vm.stopPrank();
+        _;
+    }
+
+    function testCanMintWithDepositedCollateral() public depositedCollateralAndMintedDsc {
+        uint256 userBalance = dsc.balanceOf(USER);
+        assertEq(userBalance, amountToMint);
+    }
 
     function testRevertsIfCollateralIsZero() public {
         vm.startPrank(USER);
