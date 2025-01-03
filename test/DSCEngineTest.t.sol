@@ -19,6 +19,9 @@ contract DSCEngineTest is Test {
     address weth;
 
     address public USER = makeAddr("user");
+    uint256 amountCollateral = 10 ether;
+    uint256 amountToMint = 100 ether;
+    address public user = address(1);
 
     uint256 public constant AMOUNT_COLLATERAL = 10e18;
     uint256 public constant STARTING_ERC20_BALANCE = 10e18;
@@ -96,15 +99,14 @@ contract DSCEngineTest is Test {
         uint256 userBalance = dsc.balanceOf(USER);
         assertEq(userBalance, 0);
     }
-    /////////////////////////////////////////////
+
     /// Deposit Collateral and Mint DSC Tests ///
-    /////////////////////////////////////////////
 
 
-        modifier depositedCollateralAndMintedDsc() {
+    modifier depositedCollateralAndMintedDsc() {
         vm.startPrank(USER);
         ERC20Mock(weth).approve(address(dscengine), amountCollateral);
-        dscengine.depositCollateralAndMintDsc(weth, amountCollateral, amountToMint);
+        dscengine.depositCollateralAndMintDSC(weth, amountCollateral, amountToMint);
         vm.stopPrank();
         _;
     }
