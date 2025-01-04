@@ -10,7 +10,7 @@
 
 pragma solidity ^0.8.18;
 
-import {Test, console} from "forge-std/Test.sol";
+import {Test} from "forge-std/Test.sol";
 import {StdInvariant} from "forge-std/StdInvariant.sol";
 import {DeployDSC} from "script/DeployDSC.s.sol";
 import {DSCEngine} from "src/DSCEngine.sol";
@@ -31,8 +31,6 @@ contract InvariantsTest is StdInvariant, Test {
 
         (dsc, dsce, config) = deployer.run();
         (, , weth, wbtc,) = config.activeNetworkConfig();
-        console.log("WETH Address:", weth);
-        console.log("WBTC Address:", wbtc);
 
         targetContract(address(dsce));
     }
