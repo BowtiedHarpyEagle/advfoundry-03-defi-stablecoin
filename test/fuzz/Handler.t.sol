@@ -20,4 +20,10 @@ contract Handler is Test {
 
     // redeem collateral only when there is collateral
 
+    // first we need to deposit some collateral
+
+    function depositCollateral(address tokenCollateralAddress, uint256 amountCollateral) public {
+        dsce.depositCollateral(tokenCollateralAddress, amountCollateral);
+    }
+
 }
