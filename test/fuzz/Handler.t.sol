@@ -43,6 +43,19 @@ contract Handler is Test {
         vm.stopPrank();
     }
 
+    function redeemCollateral(uint256 tokenCollateralSeed, uint256 amountCollateral) public {
+        
+        ERC20Mock collateral = _getCollateralFromSeed(tokenCollateralSeed);
+        uint256 maxCollateralToRedeem = dsce.getCollateralBalanceOfUser(msg.sender, address(collateral));
+        amountCollateral = bound (amountCollateral, 0, maxCollateralToRedeem);
+        if (amountCollateral == 0) {
+            return;
+        }
+
+        dsce.redeemCollateral(address(collateral), amountCollateral);
+    
+    }
+
     // Helper functions
 
     function _getCollateralFromSeed(uint256 tokenCollateralSeed) private view returns (ERC20Mock) {
