@@ -28,6 +28,22 @@ contract Handler is Test {
 
     }
 
+    function mintDSC(uint256 amount) public {
+                
+        (uint256 totalDscMinted, uint256 collateralValueInUSD) = dsce.getAccountInformation(msg.sender);
+        int256 maxDSCToMint = (int256(collateralValueInUSD) / 2) - int256(totalDscMinted);
+        if (maxDSCToMint < 0) {
+            return; 
+        }
+        amount = bound (amount, 0, uint256(maxDSCToMint));
+        if (amount == 0) {
+            return;
+        }
+        vm.startPrank(msg.sender);
+        dsce.mintDSC(amount);
+        vm.stopPrank();
+    }
+
     // redeem collateral only when there is collateral
 
     // first we need to deposit some collateral
