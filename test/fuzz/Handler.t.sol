@@ -17,6 +17,8 @@ contract Handler is Test {
     ERC20Mock wbtc;
 
     uint256 constant MAX_DEPOSIT_AMOUNT = type(uint96).max ; 
+    
+    uint256 public timesMintIsCalled;
 
     constructor(DSCEngine _dsce, DecentralizedStableCoin _dsc) {
         dsce = _dsce;
@@ -42,6 +44,7 @@ contract Handler is Test {
         vm.startPrank(msg.sender);
         dsce.mintDSC(amount);
         vm.stopPrank();
+        timesMintIsCalled++;
     }
 
     // redeem collateral only when there is collateral
