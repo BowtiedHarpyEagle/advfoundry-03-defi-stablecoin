@@ -19,6 +19,7 @@ contract Handler is Test {
     uint256 constant MAX_DEPOSIT_AMOUNT = type(uint96).max ; 
     
     uint256 public timesMintIsCalled;
+    address[] public usersWithCollateralDeposited;
 
     constructor(DSCEngine _dsce, DecentralizedStableCoin _dsc) {
         dsce = _dsce;
@@ -30,9 +31,12 @@ contract Handler is Test {
 
     }
 
-    function mintDSC(uint256 amount) public {
-                
-        (uint256 totalDscMinted, uint256 collateralValueInUSD) = dsce.getAccountInformation(msg.sender);
+    function mintDSC(uint256 amount, uint256 addressSeed) public {
+        if(usersWithCollateralDeposited.length == 0) {
+            return;
+        }
+        address sender = usersWithCollateralDeposited[addressSeed % usersWithCollateralDeposited.length];   
+        (uint256 totalDscMinted, uint256 collateralValueInUSD) = dsce.getAccountInformation(sender);
         int256 maxDSCToMint = (int256(collateralValueInUSD) / 2) - int256(totalDscMinted);
         if (maxDSCToMint < 0) {
             return; 
@@ -41,7 +45,7 @@ contract Handler is Test {
         if (amount == 0) {
             return;
         }
-        vm.startPrank(msg.sender);
+        vm.startPrank(sender);
         dsce.mintDSC(amount);
         vm.stopPrank();
         timesMintIsCalled++;
@@ -60,6 +64,7 @@ contract Handler is Test {
         collateral.approve(address(dsce), amountCollateral);
         dsce.depositCollateral(address(collateral), amountCollateral);
         vm.stopPrank();
+        usersWithCollateralDeposited.push(msg.sender);
     }
 
     function redeemCollateral(uint256 tokenCollateralSeed, uint256 amountCollateral) public {
