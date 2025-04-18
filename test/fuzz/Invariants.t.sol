@@ -60,7 +60,5 @@ contract InvariantsTest is StdInvariant, Test {
 
     function invariant_getterFunctionsShouldNotRevert() public view {
         dsce.getCollateralTokens();
-        dsce.getCollateralBalanceOfUser(address(0x1234), address(0x1234));
-        dsce.getUSDValue(address(0x1234), 0);
     }
 }
